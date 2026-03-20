@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Condenser Location Picker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0f1e2e;
+    --blue: #1a3a5c;
+    --accent: #e8401c;
+    --accent2: #f5a623;
+    --surface: #f4f6f9;
+    --border: #dde3ec;
+    --text: #1a2330;
+    --muted: #6b7a8d;
+    --white: #ffffff;
+    --radius: 10px;
+    --shadow: 0 4px 20px rgba(15,30,46,0.12);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--navy);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .logo-mark {
+    width: 30px; height: 30px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  header h1 { font-size: 13px; font-weight: 600; color: white; }
+  header p  { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  /* address bar */
+  .search-row { display: flex; gap: 8px; }
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap svg {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); pointer-events: none;
+  }
+  #address-input {
+    width: 100%;
+    padding: 9px 10px 9px 34px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #address-input:focus { border-color: var(--blue); }
+
+  .btn {
+    padding: 9px 14px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:hover  { opacity: 0.88; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-accent  { background: var(--accent); color: white; }
+  .btn-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* instruction */
+  .instruction-strip {
+    background: #fffbf0;
+    border: 1.5px solid #f0d98a;
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #7a5a00;
+  }
+  .step-badge {
+    background: var(--accent2); color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 20px; flex-shrink: 0;
+  }
+
+  /* map */
+  .map-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    position: relative;
+    flex: 1;
+  }
+  #map { width: 100%; height: 320px; cursor: crosshair; }
+  .map-overlay-label {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(15,30,46,0.82); color: white;
+    font-size: 10px; font-weight: 600;
+    padding: 4px 9px; border-radius: 5px;
+    pointer-events: none;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  /* result */
+  .result-panel {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: none; flex-direction: column; gap: 10px;
+  }
+  .result-panel.visible { display: flex; }
+
+  .result-panel h3 {
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .check-badge {
+    background: #22c55e; border-radius: 50%;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .coords-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .coord-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px;
+    font-family: 'Space Mono', monospace; font-size: 11px;
+  }
+
+  /* saved confirmation */
+  .saved-badge {
+    display: none;
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #166534;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .saved-badge.visible { display: flex; }
+
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 16px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--navy); color: white;
+    padding: 8px 18px; border-radius: 30px;
+    font-size: 12px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+    z-index: 9999; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* loading state */
+  .loading-strip {
+    background: #e8f0fe; border: 1.5px solid #93b4f5;
+    border-radius: var(--radius); padding: 8px 12px;
+    font-size: 12px; color: #1a3a8f;
+    display: none; align-items: center; gap: 8px;
+  }
+  .loading-strip.visible { display: flex; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid #93b4f5;
+    border-top-color: #1a3a8f;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">AC</div>
+  <div>
+    <h1>Condenser Location Picker</h1>
+    <p>Click the map to mark your condenser install location</p>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="search-row">
+    <div class="search-wrap">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="address-input" type="text" placeholder="Loading property address…" />
+    </div>
+    <button class="btn btn-primary" onclick="searchAddress()">Find</button>
+  </div>
+
+  <div class="loading-strip" id="loading-strip">
+    <div class="spinner"></div>
+    <span id="loading-msg">Loading property address…</span>
+  </div>
+
+  <div class="instruction-strip" id="instruction-strip">
+    <span class="step-badge" id="step-badge">STEP 1</span>
+    <span id="instruction-text">Address loading… then <strong>click the map</strong> to place an X at the condenser location.</span>
+  </div>
+
+  <div class="map-card">
+    <div id="map"></div>
+    <div class="map-overlay-label">SATELLITE — Click to place X</div>
+  </div>
+
+  <div class="result-panel" id="result-panel">
+    <h3>
+      <span class="check-badge">
+        <svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </span>
+      Location Marked
+    </h3>
+    <div class="coords-row">
+      <div class="coord-chip" id="lat-chip">LAT: —</div>
+      <div class="coord-chip" id="lng-chip">LNG: —</div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-accent" onclick="saveToKnack()">✓ Save Location to Form</button>
+      <button class="btn btn-outline" onclick="resetMarker()">✕ Reset</button>
+    </div>
+  </div>
+
+  <div class="saved-badge" id="saved-badge">
+    <svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+    Location saved to form — you can now submit the permit record.
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── CONFIG — replace with your real key ─────────────────────────────
+  const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
+  // ─────────────────────────────────────────────────────────────────────
+
+  let map, marker, geocoder;
+  let markerLat = null, markerLng = null;
+
+  // Read address from URL param ?address=...
+  function getAddressParam() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('address') || '';
+  }
+
+  function initMap() {
+    geocoder = new google.maps.Geocoder();
+
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: 34.0522, lng: -118.2437 },
+      zoom: 18,
+      mapTypeId: 'satellite',
+      tilt: 0,
+      zoomControl: true,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+    });
+
+    map.addListener('click', function(e) {
+      placeMarker(e.latLng.lat(), e.latLng.lng());
+    });
+
+    // Auto-load address from URL param
+    const address = getAddressParam();
+    if (address) {
+      document.getElementById('address-input').value = decodeURIComponent(address);
+      document.getElementById('loading-strip').classList.add('visible');
+      document.getElementById('loading-msg').textContent = 'Finding ' + decodeURIComponent(address) + '…';
+      setTimeout(() => searchAddress(true), 600); // slight delay for map init
+    } else {
+      document.getElementById('instruction-text').textContent =
+        'Enter the property address above, then click the map to place an X.';
+      document.getElementById('step-badge').textContent = 'STEP 1';
+    }
+  }
+
+  function searchAddress(auto) {
+    const addr = document.getElementById('address-input').value.trim();
+    if (!addr) return showToast('Please enter an address');
+
+    document.getElementById('loading-strip').classList.add('visible');
+    document.getElementById('loading-msg').textContent = 'Finding ' + addr + '…';
+
+    geocoder.geocode({ address: addr }, function(results, status) {
+      document.getElementById('loading-strip').classList.remove('visible');
+      if (status === 'OK' && results[0]) {
+        const loc = results[0].geometry.location;
+        map.setCenter(loc);
+        map.setZoom(20);
+        document.getElementById('instruction-text').innerHTML =
+          'Property found! Now <strong>click the map</strong> to place an X at the condenser location.';
+        document.getElementById('step-badge').textContent = 'STEP 2';
+        if (!auto) showToast('📍 Address found — click to place X');
+      } else {
+        showToast('Address not found. Try adding city and state.');
+      }
+    });
+  }
+
+  function placeMarker(lat, lng) {
+    markerLat = lat;
+    markerLng = lng;
+
+    if (marker) marker.setMap(null);
+
+    marker = new google.maps.Marker({
+      position: { lat, lng },
+      map: map,
+      label: {
+        text: '✕',
+        color: '#e8401c',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        fontFamily: 'Space Mono, monospace',
+      },
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0 },
+      title: 'Condenser Location',
+    });
+
+    document.getElementById('result-panel').classList.add('visible');
+    document.getElementById('saved-badge').classList.remove('visible');
+    document.getElementById('lat-chip').textContent = 'LAT: ' + lat.toFixed(6);
+    document.getElementById('lng-chip').textContent = 'LNG: ' + lng.toFixed(6);
+    document.getElementById('step-badge').textContent = 'STEP 3';
+    document.getElementById('instruction-text').innerHTML =
+      'Great! Now click <strong>"Save Location to Form"</strong> to store it in your permit record.';
+  }
+
+  function buildStaticMapURL(lat, lng) {
+    const zoom = Math.min(map ? map.getZoom() : 20, 20);
+    const markerParam = `color:red|label:X|${lat},${lng}`;
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x320&maptype=satellite&markers=${encodeURIComponent(markerParam)}&key=${GOOGLE_MAPS_API_KEY}`;
+  }
+
+  function saveToKnack() {
+    if (!markerLat) return showToast('Place a marker first');
+
+    const staticMapURL = buildStaticMapURL(markerLat, markerLng);
+
+    // Show saving state
+    document.getElementById('step-badge').textContent = '...';
+    document.getElementById('instruction-text').textContent = 'Capturing map image, please wait...';
+    showToast('📸 Capturing map image...');
+
+    // Fetch the Static Maps image via a CORS proxy, convert to blob, upload to Knack
+    const proxyURL = 'https://corsproxy.io/?' + encodeURIComponent(staticMapURL);
+
+    fetch(proxyURL)
+      .then(function(res) {
+        if (!res.ok) throw new Error('Image fetch failed: ' + res.status);
+        return res.blob();
+      })
+      .then(function(blob) {
+        // Build a FormData with the image file
+        const formData = new FormData();
+        formData.append('files', blob, 'condenser-location.png');
+
+        // Upload to Knack file upload endpoint
+        return fetch('https://api.knack.com/v1/applications/' + KNACK_APP_ID + '/assets/image/upload', {
+          method: 'POST',
+          headers: {
+            'X-Knack-Application-Id': KNACK_APP_ID,
+            'X-Knack-REST-API-Key':   KNACK_API_KEY,
+          },
+          body: formData
+        });
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        console.log('[Condenser Picker] Image uploaded:', data);
+
+        // Knack returns { id, filename, url } or similar
+        const fileData = data[0] || data;
+
+        // Post everything back to parent Knack page
+        window.parent.postMessage({
+          type:       'CONDENSER_LOCATION',
+          lat:        markerLat,
+          lng:        markerLng,
+          mapURL:     staticMapURL,
+          imageFile:  fileData,   // full Knack file object for field_217
+        }, '*');
+
+        document.getElementById('saved-badge').classList.add('visible');
+        document.getElementById('step-badge').textContent = '✓';
+        document.getElementById('instruction-text').textContent =
+          'Location saved! Complete the rest of the form and submit.';
+        showToast('✓ Location saved to form');
+      })
+      .catch(function(err) {
+        console.error('[Condenser Picker] Image upload failed:', err);
+
+        // Fall back to sending without image — still saves lat/lng/mapURL
+        window.parent.postMessage({
+          type:      'CONDENSER_LOCATION',
+          lat:       markerLat,
+          lng:       markerLng,
+          mapURL:    staticMapURL,
+          imageFile: null,
+        }, '*');
+
+        document.getElementById('saved-badge').classList.add('visible');
+        document.getElementById('step-badge').textContent = '✓';
+        document.getElementById('instruction-text').textContent =
+          'Location saved! Complete the rest of the form and submit.';
+        showToast('✓ Location saved (image upload failed — URL saved instead)');
+      });
+  }
+
+  // Knack app credentials passed from parent via URL params
+  const KNACK_APP_ID  = new URLSearchParams(window.location.search).get('appId')  || '';
+  const KNACK_API_KEY = new URLSearchParams(window.location.search).get('apiKey') || '';
+
+  function resetMarker() {
+    if (marker) { marker.setMap(null); marker = null; }
+    markerLat = null; markerLng = null;
+    document.getElementById('result-panel').classList.remove('visible');
+    document.getElementById('saved-badge').classList.remove('visible');
+    document.getElementById('step-badge').textContent = 'STEP 2';
+    document.getElementById('instruction-text').innerHTML =
+      'Click the map to place an X at the condenser location.';
+    showToast('Marker cleared');
+  }
+
+  document.getElementById('address-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') searchAddress();
+  });
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  window.initMap = initMap;
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
+
+</body>
+</html>

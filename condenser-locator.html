@@ -412,11 +412,11 @@
         formData.append('files', blob, 'condenser-location.png');
 
         // Upload to Knack file upload endpoint
-        return fetch('https://api.knack.com/v1/applications/' + KNACK_APP_ID + '/assets/image/upload', {
+        return fetch('https://api.knack.com/v1/applications/' + _KNACK_APP_ID + '/assets/image/upload', {
           method: 'POST',
           headers: {
-            'X-Knack-Application-Id': KNACK_APP_ID,
-            'X-Knack-REST-API-Key':   KNACK_API_KEY,
+            'X-Knack-Application-Id': _KNACK_APP_ID,
+            'X-Knack-REST-API-Key':   _KNACK_API_KEY,
           },
           body: formData
         });
@@ -464,8 +464,8 @@
   }
 
   // Knack app credentials passed from parent via URL params
-  const KNACK_APP_ID  = new URLSearchParams(window.location.search).get('appId')  || '';
-  const KNACK_API_KEY = new URLSearchParams(window.location.search).get('apiKey') || '';
+  const _KNACK_APP_ID  = '5c421fa4299f770862acddcb';
+  const _KNACK_API_KEY = 'd1c532a3-7b00-49a7-9216-225dbaee7afa';
 
   function resetMarker() {
     if (marker) { marker.setMap(null); marker = null; }

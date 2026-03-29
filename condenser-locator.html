@@ -146,8 +146,8 @@
     background: white;
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px 14px;
-    display: none; flex-direction: column; gap: 10px;
+    padding: 8px 14px;
+    display: none; flex-direction: row; align-items: center; gap: 12px;
   }
   .result-panel.visible { display: flex; }
 
@@ -161,7 +161,7 @@
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
 
-  .coords-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .coords-row { display: none; }
   .coord-chip {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 6px; padding: 5px 10px;
@@ -183,7 +183,7 @@
   }
   .saved-badge.visible { display: flex; }
 
-  .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
 
   /* toast */
   .toast {

@@ -61,8 +61,10 @@
     flex-direction: column;
     flex: 1;
     padding: 12px;
-    gap: 10px;
+    gap: 8px;
   }
+
+  .map-card { margin-bottom: 0; }
 
   /* address bar */
   .search-row { display: flex; gap: 8px; }
@@ -123,8 +125,9 @@
   /* map */
   .map-card {
     background: white;
-    border-radius: var(--radius);
+    border-radius: var(--radius) var(--radius) 0 0;
     border: 1.5px solid var(--border);
+    border-bottom: none;
     overflow: hidden;
     box-shadow: var(--shadow);
     position: relative;
@@ -145,7 +148,8 @@
   .result-panel {
     background: white;
     border: 1.5px solid var(--border);
-    border-radius: var(--radius);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
     padding: 8px 14px;
     display: none; flex-direction: row; align-items: center; gap: 12px;
   }

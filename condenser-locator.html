@@ -396,6 +396,7 @@
     document.getElementById('lat-chip').textContent = 'LAT: ' + lat.toFixed(6);
     document.getElementById('lng-chip').textContent = 'LNG: ' + lng.toFixed(6);
     document.getElementById('step-badge').textContent = 'STEP 3';
+    resizeMapForPanel(true);
     document.getElementById('instruction-text').innerHTML =
       'Great! Now click <strong>"Save Location to Form"</strong> to store it in your permit record.';
   }
@@ -485,6 +486,20 @@
   const _KNACK_APP_ID  = '5c421fa4299f770862acddcb';
   const _KNACK_API_KEY = 'd1c532a3-7b00-49a7-9216-225dbaee7afa';
 
+  function resizeMapForPanel(show) {
+    var card = document.querySelector('.map-card');
+    if (show) {
+      // Shrink map card so result panel fits without scrolling
+      card.style.flex = '1 1 0';
+      card.style.maxHeight = 'calc(100% - 46px)';
+    } else {
+      card.style.flex = '1';
+      card.style.maxHeight = '';
+    }
+    // Tell Google Maps to recalculate its size
+    setTimeout(function() { google.maps.event.trigger(map, 'resize'); }, 50);
+  }
+
   function resetMarker() {
     if (marker) { marker.setMap(null); marker = null; }
     markerLat = null; markerLng = null;
@@ -493,6 +508,7 @@
     document.getElementById('step-badge').textContent = 'STEP 2';
     document.getElementById('instruction-text').innerHTML =
       'Click the map to place an X at the condenser location.';
+    resizeMapForPanel(false);
     showToast('Marker cleared');
   }
 

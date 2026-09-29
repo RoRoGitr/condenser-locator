@@ -337,6 +337,7 @@
       map: map,
       title: 'Property address',
       zIndex: 1,
+      clickable: false, // let clicks pass through so the X can be placed right next to (or on) the pin
       icon: {
         url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(pinSvg),
         scaledSize: new google.maps.Size(34, 48),

@@ -435,7 +435,7 @@
           method: 'POST',
           headers: {
             'X-Knack-Application-Id': _KNACK_APP_ID,
-            'X-Knack-REST-API-Key':   _KNACK_API_KEY,
+            'Authorization':          _KNACK_TOKEN || '',
           },
           body: formData
         });
@@ -484,7 +484,12 @@
 
   // Knack app credentials passed from parent via URL params
   const _KNACK_APP_ID  = '5c421fa4299f770862acddcb';
-  const _KNACK_API_KEY = 'd1c532a3-7b00-49a7-9216-225dbaee7afa';
+  let _KNACK_TOKEN = null; // the logged-in Knack user's session token, handed over by the parent form
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'KNACK_SESSION') return;
+    if (!/^https:\/\/[a-z0-9-]+\.knack\.com$/i.test(e.origin)) return;
+    _KNACK_TOKEN = e.data.token || null;
+  });
 
   function resizeMapForPanel(show) {
     var card = document.querySelector('.map-card');

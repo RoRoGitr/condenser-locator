@@ -315,6 +315,15 @@
     return params.get('address') || '';
   }
 
+  // Edit screens pass the record's saved coordinates as ?lat=&lng= so the X can be pre-placed.
+  function getSavedLocationParam() {
+    const params = new URLSearchParams(window.location.search);
+    const lat = parseFloat(params.get('lat'));
+    const lng = parseFloat(params.get('lng'));
+    if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) return null;
+    return { lat: lat, lng: lng };
+  }
+
   function initMap() {
     geocoder = new google.maps.Geocoder();
 
@@ -333,6 +342,20 @@
     map.addListener('click', function(e) {
       placeMarker(e.latLng.lat(), e.latLng.lng());
     });
+
+    // Edit screens: show the saved X and let the user move it.
+    const saved = getSavedLocationParam();
+    if (saved) {
+      const savedAddress = getAddressParam();
+      if (savedAddress) document.getElementById('address-input').value = decodeURIComponent(savedAddress);
+      map.setCenter({ lat: saved.lat, lng: saved.lng });
+      map.setZoom(20);
+      placeMarker(saved.lat, saved.lng);
+      document.getElementById('step-badge').textContent = 'SAVED';
+      document.getElementById('instruction-text').innerHTML =
+        'This is the saved location. <strong>Click the map</strong> to move the X, then click "Save Location to Form".';
+      return;
+    }
 
     // Auto-load address from URL param
     const address = getAddressParam();
@@ -420,12 +443,14 @@
     // Fetch the Static Maps image directly (Google serves it with CORS enabled), convert to blob, upload to Knack.
     // The former third-party proxy (corsproxy.io) started answering 403 and is no longer used.
 
+    let capturedBlob = null;
     fetch(staticMapURL)
       .then(function(res) {
         if (!res.ok) throw new Error('Image fetch failed: ' + res.status);
         return res.blob();
       })
       .then(function(blob) {
+        capturedBlob = blob;
         // Build a FormData with the image file
         const formData = new FormData();
         formData.append('files', blob, 'condenser-location.png');
@@ -454,6 +479,7 @@
           lng:        markerLng,
           mapURL:     staticMapURL,
           imageFile:  fileData,   // full Knack file object for field_217
+          imageBlob:  capturedBlob, // same image as a blob, for forms that carry a file input
         }, '*');
 
         document.getElementById('saved-badge').classList.add('visible');
@@ -472,6 +498,7 @@
           lng:       markerLng,
           mapURL:    staticMapURL,
           imageFile: null,
+          imageBlob: capturedBlob,
         }, '*');
 
         document.getElementById('saved-badge').classList.add('visible');

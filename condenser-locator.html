@@ -308,6 +308,7 @@
 
   let map, marker, geocoder;
   let markerLat = null, markerLng = null;
+  let propertyMarker = null, propertyLat = null, propertyLng = null; // green pin on the property address
 
   // Read address from URL param ?address=...
   function getAddressParam() {
@@ -322,6 +323,26 @@
     const lng = parseFloat(params.get('lng'));
     if (!isFinite(lat) || !isFinite(lng) || (lat === 0 && lng === 0)) return null;
     return { lat: lat, lng: lng };
+  }
+
+  // Green pin on the geocoded property so the client can tell which house is theirs (the X stays red).
+  function showPropertyPin(lat, lng) {
+    propertyLat = lat; propertyLng = lng;
+    if (propertyMarker) propertyMarker.setMap(null);
+    const pinSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="48" viewBox="0 0 34 48">' +
+      '<path d="M17 1C8.2 1 1 8.2 1 17c0 11.6 16 30 16 30s16-18.4 16-30C33 8.2 25.8 1 17 1z" fill="#16a34a" stroke="#ffffff" stroke-width="2"/>' +
+      '<circle cx="17" cy="17" r="6" fill="#ffffff"/></svg>';
+    propertyMarker = new google.maps.Marker({
+      position: { lat: lat, lng: lng },
+      map: map,
+      title: 'Property address',
+      zIndex: 1,
+      icon: {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(pinSvg),
+        scaledSize: new google.maps.Size(34, 48),
+        anchor: new google.maps.Point(17, 46),
+      },
+    });
   }
 
   function initMap() {
@@ -347,7 +368,12 @@
     const saved = getSavedLocationParam();
     if (saved) {
       const savedAddress = getAddressParam();
-      if (savedAddress) document.getElementById('address-input').value = decodeURIComponent(savedAddress);
+      if (savedAddress) {
+        document.getElementById('address-input').value = decodeURIComponent(savedAddress);
+        geocoder.geocode({ address: decodeURIComponent(savedAddress) }, function(results, status) {
+          if (status === 'OK' && results[0]) { const l = results[0].geometry.location; showPropertyPin(l.lat(), l.lng()); }
+        });
+      }
       map.setCenter({ lat: saved.lat, lng: saved.lng });
       map.setZoom(20);
       placeMarker(saved.lat, saved.lng);
@@ -384,8 +410,9 @@
         const loc = results[0].geometry.location;
         map.setCenter(loc);
         map.setZoom(20);
+        showPropertyPin(loc.lat(), loc.lng());
         document.getElementById('instruction-text').innerHTML =
-          'Property found! Now <strong>click the map</strong> to place an X at the condenser location.';
+          'Property found: the <strong style="color:#16a34a">green pin</strong> marks the house. Now <strong>click the map</strong> to place the red X on the condenser location.';
         document.getElementById('step-badge').textContent = 'STEP 2';
         if (!auto) showToast('📍 Address found — click to place X');
       } else {
@@ -427,7 +454,8 @@
   function buildStaticMapURL(lat, lng) {
     const zoom = Math.min(map ? map.getZoom() : 20, 20);
     const markerParam = `color:red|label:X|${lat},${lng}`;
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x320&maptype=satellite&markers=${encodeURIComponent(markerParam)}&key=${GOOGLE_MAPS_API_KEY}`;
+    const propertyParam = (propertyLat !== null && propertyLng !== null) ? `&markers=${encodeURIComponent(`color:green|size:mid|${propertyLat},${propertyLng}`)}` : '';
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x320&maptype=satellite&markers=${encodeURIComponent(markerParam)}${propertyParam}&key=${GOOGLE_MAPS_API_KEY}`;
   }
 
   function saveToKnack() {

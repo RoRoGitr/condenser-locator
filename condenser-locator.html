@@ -417,10 +417,10 @@
     document.getElementById('instruction-text').textContent = 'Capturing map image, please wait...';
     showToast('📸 Capturing map image...');
 
-    // Fetch the Static Maps image via a CORS proxy, convert to blob, upload to Knack
-    const proxyURL = 'https://corsproxy.io/?' + encodeURIComponent(staticMapURL);
+    // Fetch the Static Maps image directly (Google serves it with CORS enabled), convert to blob, upload to Knack.
+    // The former third-party proxy (corsproxy.io) started answering 403 and is no longer used.
 
-    fetch(proxyURL)
+    fetch(staticMapURL)
       .then(function(res) {
         if (!res.ok) throw new Error('Image fetch failed: ' + res.status);
         return res.blob();
